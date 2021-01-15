@@ -375,7 +375,7 @@ function windows_azure_storage_wp_get_attachment_metadata( $data, $post_id ) {
  */
 function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id ) {
 	$default_azure_storage_account_container_name = \Windows_Azure_Helper::get_default_container();
-	
+
 	// Get upload directory.
 	$upload_dir = \Windows_Azure_Helper::wp_upload_dir();
 
@@ -519,7 +519,7 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
  */
 function windows_azure_storage_delete_local_files( $data, $attachment_id ) {
 	$upload_file_name = get_attached_file( $attachment_id, true );
-	
+
 	// Use core function introduced in 4.9.7 for deleting local files if available
 	if ( function_exists( 'wp_delete_attachment_files') ) {
 		$deleted = wp_delete_attachment_files( $attachment_id, $data, array(), $upload_file_name );
@@ -532,14 +532,14 @@ function windows_azure_storage_delete_local_files( $data, $attachment_id ) {
 	// Get upload directory.
 	$upload_dir = Windows_Azure_Helper::wp_upload_dir();
 	$subdir = ltrim( $upload_dir['reldir'] . $upload_dir['subdir'], DIRECTORY_SEPARATOR );
-	
+
 	$relative_file_name = DIRECTORY_SEPARATOR === $subdir
 		? basename( $upload_file_name )
 		: str_replace( $upload_dir['uploads'] . DIRECTORY_SEPARATOR, '', $upload_file_name );
 
 	// Delete local file
 	Windows_Azure_Helper::unlink_file( $relative_file_name );
-	
+
 	$file_upload_dir = strpos( $relative_file_name, '/' ) !== false
 		? substr( $relative_file_name, 0, strrpos( $relative_file_name, '/' ) )
 		: '';
@@ -796,6 +796,9 @@ function windows_azure_storage_wp_calculate_image_srcset( $sources, $size_array,
 
 	if ( ! empty( $media_info ) ) {
 		$base_url = trailingslashit( WindowsAzureStorageUtil::get_storage_url_base( false ) . $media_info['container'] );
+		if ( ! empty( $azure_cname ) ) {
+			$base_url = trailingslashit( WindowsAzureStorageUtil::get_storage_url_base( false ) );
+		}
 
 		foreach ( $sources as &$source ) {
 			$img_filename = substr( $source['url'], strrpos( $source['url'], '/' ) + 1 );

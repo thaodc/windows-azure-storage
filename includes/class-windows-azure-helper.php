@@ -117,6 +117,17 @@ class Windows_Azure_Helper {
 	}
 
 	/**
+	 * Return upload folder name.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @return string upload folder value.
+	 */
+	static public function get_upload_folder() {
+		return untrailingslashit( strtolower( defined( 'MICROSOFT_AZURE_UPLOAD_FOLDER' ) ? MICROSOFT_AZURE_UPLOAD_FOLDER : get_option( 'azure_storage_upload_folder' ) ) );
+	}
+
+	/**
 	 * Returns a flag which determines whether or not to use this for default upload.
 	 *
 	 * @since 4.2.0

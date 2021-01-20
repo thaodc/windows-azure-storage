@@ -113,6 +113,10 @@ function windows_azure_storage_plugin_register_settings() {
 		register_setting( 'windows-azure-storage-settings-group', 'default_azure_storage_account_container_name', 'sanitize_text_field' );
 	}
 
+	if ( ! defined( 'MICROSOFT_AZURE_UPLOAD_FOLDER' ) ) {
+		register_setting( 'windows-azure-storage-settings-group', 'azure_storage_upload_folder', 'sanitize_text_field' );
+	}
+
 	if ( ! defined( 'MICROSOFT_AZURE_CNAME' ) ) {
 		register_setting( 'windows-azure-storage-settings-group', 'cname', 'esc_url_raw' );
 	}
@@ -164,6 +168,16 @@ function windows_azure_storage_plugin_register_settings() {
 		'windows-azure-storage-plugin-options',
 		'windows-azure-storage-settings'
 	);
+    /**
+     * @since 4.0.0
+     */
+    add_settings_field(
+        'azure_storage_default_upload_folder',
+        __( 'Upload folder name', 'windows-azure-storage' ),
+        'windows_azure_storage_setting_upload_folder',
+        'windows-azure-storage-plugin-options',
+        'windows-azure-storage-settings'
+    );
 	/**
 	 * @since 4.0.0
 	 */
@@ -329,6 +343,27 @@ function windows_azure_storage_setting_storage_container() {
 	echo '<p>';
 		_e( 'Default container to be used for storing media files. You can define <code>MICROSOFT_AZURE_CONTAINER</code> constant to override it.', 'windows-azure-storage' );
 	echo '</p>';
+}
+
+/**
+ * Upload folder setting callback function.
+ *
+ * @since 4.0.0
+ *
+ * @return void
+ */
+function windows_azure_storage_setting_upload_folder() {
+    $upload_folder = Windows_Azure_Helper::get_upload_folder();
+
+    if ( defined( 'MICROSOFT_AZURE_UPLOAD_FOLDER' ) ) {
+        echo '<input type="text" class="regular-text" value="', esc_attr( $upload_folder ), '" readonly disabled>';
+    } else {
+        echo '<input type="text" name="azure_storage_upload_folder" class="regular-text" value="', esc_attr( $upload_folder ), '">';
+    }
+
+    echo '<p>';
+    _e( 'Use this option if you would like to upload the image to specify folder like <code>http://mydomain.com/folder_setting/YYYY/MM/image.png</code>', 'windows-azure-storage' );
+    echo '</p>';
 }
 
 /**

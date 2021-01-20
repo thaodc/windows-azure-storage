@@ -375,9 +375,21 @@ function windows_azure_storage_wp_get_attachment_metadata( $data, $post_id ) {
  */
 function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id ) {
 	$default_azure_storage_account_container_name = \Windows_Azure_Helper::get_default_container();
+	$default_azure_storage_upload_folder = Windows_Azure_Helper::get_upload_folder();
 
 	// Get upload directory.
 	$upload_dir = \Windows_Azure_Helper::wp_upload_dir();
+
+	// We should build the upload dir base on post_date time, if not then upload the thumbnails always fails,
+	// because it always based on current time
+	// Refer to \media_handle_upload method in wp-admin/include/media.php
+	$parent_id = wp_get_post_parent_id($post_id);
+	if ( ! empty( $parent_id ) ) {
+		$post = get_post($parent_id);
+		if ( ! empty( $post ) ) {
+			$upload_dir = array_merge($upload_dir, wp_upload_dir($post->post_date));
+		}
+	}
 
 	$upload_file_name = get_post_meta( $post_id, '_wp_attached_file', true );
 
@@ -413,9 +425,14 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 
 			// only upload file if file exists locally
 			if ( \Windows_Azure_Helper::file_exists( $file_path ) ) {
+				$blob_name_main = $file_path;
+				if ( ! empty( $default_azure_storage_upload_folder ) ) {
+					$blob_name_main = trim($default_azure_storage_upload_folder, '/') . '/' . $file_path;
+				}
+
 				\Windows_Azure_Helper::put_media_to_blob_storage(
 					$default_azure_storage_account_container_name,
-					$file_path,
+					$blob_name_main,
 					$file_path,
 					$mime_type
 				);
@@ -426,8 +443,18 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 			return $data;
 		}
 
+		// If we has configured a CDN link for custom domain name then we should not include the container
+		$storage_url_base = WindowsAzureStorageUtil::get_storage_url_base();
+		if ( ! empty( \Windows_Azure_Helper::get_cname() ) ) {
+			$storage_url_base = WindowsAzureStorageUtil::get_storage_url_base(false);
+		}
+
+		if ( ! empty( $default_azure_storage_upload_folder ) ) {
+			$storage_url_base .= trim($default_azure_storage_upload_folder, '/') . '/';
+		}
+
 		$url = sprintf( '%1$s/%2$s',
-			untrailingslashit( WindowsAzureStorageUtil::get_storage_url_base() ),
+			untrailingslashit( $storage_url_base ),
 			$file_path
 		);
 
@@ -454,9 +481,14 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 						$mime_type = 'image/jpeg';
 					}
 
+					$blob_name_thumbnail = $blob_name;
+					if ( ! empty( $default_azure_storage_upload_folder ) ) {
+						$blob_name_thumbnail = trim($default_azure_storage_upload_folder, '/') . '/' . $blob_name;
+					}
+
 					\Windows_Azure_Helper::put_media_to_blob_storage(
 						$default_azure_storage_account_container_name,
-						$blob_name,
+						$blob_name_thumbnail,
 						$blob_name,
 						$mime_type
 					);
@@ -480,9 +512,14 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 					5 * MINUTE_IN_SECONDS
 				);
 
+				$blob_name_original = $blob_name;
+				if ( ! empty( $default_azure_storage_upload_folder ) ) {
+					$blob_name_original = trim($default_azure_storage_upload_folder, '/') . '/' . $blob_name;
+				}
+
 				\Windows_Azure_Helper::put_media_to_blob_storage(
 					$default_azure_storage_account_container_name,
-					$blob_name,
+					$blob_name_original,
 					$blob_name,
 					$mime_type
 				);

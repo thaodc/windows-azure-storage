@@ -400,6 +400,11 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 	// Upload path for remaining files
 	$upload_folder_path = trailingslashit( ltrim( $upload_dir['reldir'] . $upload_dir['subdir'], '/' ) );
 
+	$blob_name_main = $file_path;
+	if ( ! empty( $default_azure_storage_upload_folder ) ) {
+		$blob_name_main = trim($default_azure_storage_upload_folder, '/') . '/' . $file_path;
+	}
+
 	try {
 		$post_array = wp_unslash( $_POST );
 		$post_array = wp_parse_args( $post_array, array(
@@ -425,11 +430,6 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 
 			// only upload file if file exists locally
 			if ( \Windows_Azure_Helper::file_exists( $file_path ) ) {
-				$blob_name_main = $file_path;
-				if ( ! empty( $default_azure_storage_upload_folder ) ) {
-					$blob_name_main = trim($default_azure_storage_upload_folder, '/') . '/' . $file_path;
-				}
-
 				\Windows_Azure_Helper::put_media_to_blob_storage(
 					$default_azure_storage_account_container_name,
 					$blob_name_main,
@@ -533,7 +533,7 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 
 		add_post_meta( $post_id, 'windows_azure_storage_info', array(
 			'container'  => $default_azure_storage_account_container_name,
-			'blob'       => $file_path,
+			'blob'       => $blob_name_main,
 			'url'        => $url,
 			'thumbnails' => $thumbnails,
 			'version'    => MSFT_AZURE_PLUGIN_VERSION,

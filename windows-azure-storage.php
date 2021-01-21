@@ -493,7 +493,7 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 						$mime_type
 					);
 
-					$thumbnails[] = $blob_name;
+					$thumbnails[] = $blob_name_thumbnail;
 				}
 			}
 		}
@@ -525,7 +525,7 @@ function windows_azure_storage_wp_generate_attachment_metadata( $data, $post_id 
 				);
 
 				// Add original_image to thumbnails array to allow deletion later if needed
-				$thumbnails[] = $blob_name;
+				$thumbnails[] = $blob_name_original;
 			}
 		}
 
